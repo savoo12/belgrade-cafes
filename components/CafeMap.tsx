@@ -15,6 +15,16 @@ interface Cafe {
   temperature: number;
 }
 
+const glassPanel: React.CSSProperties = {
+  borderRadius: 22,
+  border: "1px solid rgba(255,255,255,0.25)",
+  background: "linear-gradient(130deg, rgba(255,255,255,0.22), rgba(255,255,255,0.07))",
+  backdropFilter: "blur(22px) saturate(140%)",
+  WebkitBackdropFilter: "blur(22px) saturate(140%)",
+  boxShadow:
+    "0 26px 48px rgba(4, 8, 18, 0.5), inset 0 1px 0 rgba(255,255,255,0.24)",
+};
+
 export default function CafeMap() {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
@@ -29,7 +39,7 @@ export default function CafeMap() {
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: "mapbox://styles/mapbox/dark-v11",
       center: [20.4612, 44.8125],
       zoom: 12,
     });
@@ -88,7 +98,7 @@ export default function CafeMap() {
         ${cafe.address}`
       );
       const marker = new Marker({
-        color: cafe.isSunny ? "#FFD700" : "#808080",
+        color: cafe.isSunny ? "#ffe082" : "#8ea3c4",
       })
         .setLngLat(cafe.coordinates)
         .setPopup(popup)
@@ -101,57 +111,113 @@ export default function CafeMap() {
     });
   }, [cafes, showSunnyOnly]);
 
-  if (loading) return <div>Loading cafés…</div>;
+  if (loading)
+    return (
+      <div style={{ ...glassPanel, padding: 20 }}>
+        Loading cafés…
+      </div>
+    );
   if (error)
     return (
-      <div>
-        Error: {error} <button onClick={fetchData}>Retry</button>
+      <div style={{ ...glassPanel, padding: 20 }}>
+        Error: {error}{" "}
+        <button onClick={fetchData} style={{ marginLeft: 8 }}>
+          Retry
+        </button>
       </div>
     );
 
   const visibleCafes = showSunnyOnly ? cafes.filter((c) => c.isSunny) : cafes;
 
   return (
-    <div className="grid md:grid-cols-2 gap-4">
-      <div className="flex flex-wrap gap-2 mb-4">
+    <div style={{ display: "grid", gap: 14 }}>
+      <div style={{ ...glassPanel, padding: 12, display: "flex", gap: 10 }}>
         <button
-          className="px-3 py-1 border rounded"
+          style={{
+            border: "1px solid rgba(255,255,255,0.34)",
+            borderRadius: 999,
+            background: "rgba(190, 226, 255, 0.16)",
+            color: "#ffffff",
+            padding: "8px 14px",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
           onClick={() => setShowSunnyOnly(!showSunnyOnly)}
         >
           {showSunnyOnly ? "Show All" : "Show Sunny Only"}
         </button>
       </div>
+
       <div
-        ref={mapContainer}
-        style={{ height: "500px", width: "100%" }}
-        className="rounded"
-      />
-      <div className="overflow-y-auto max-h-[500px] p-2">
-        <h2 className="text-xl font-semibold mb-2">Cafés</h2>
-        <ul>
-          {visibleCafes.map((cafe) => (
-            <li
-              key={cafe.id}
-              className="p-2 mb-2 border rounded cursor-pointer hover:bg-gray-100"
-              onClick={() => {
-                mapRef.current?.flyTo({
-                  center: cafe.coordinates,
-                  zoom: 15,
-                });
-              }}
-            >
-              <div className="flex justify-between">
-                <span className="font-medium">{cafe.name}</span>
-                <span>{cafe.isSunny ? "☀️" : "☁️"}</span>
-              </div>
-              <div className="text-sm">
-                {cafe.weatherDescription}, {cafe.temperature}°C
-              </div>
-              <div className="text-xs text-gray-600">{cafe.address}</div>
-            </li>
-          ))}
-        </ul>
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.5fr) minmax(280px, 1fr)",
+          gap: 14,
+        }}
+      >
+        <div
+          style={{
+            ...glassPanel,
+            padding: 6,
+            minHeight: 520,
+          }}
+        >
+          <div
+            ref={mapContainer}
+            style={{ height: "100%", width: "100%", borderRadius: 16, overflow: "hidden" }}
+          />
+        </div>
+
+        <div style={{ ...glassPanel, overflow: "hidden" }}>
+          <div style={{ padding: "14px 14px 6px", fontSize: 22, fontWeight: 700 }}>
+            Cafés
+          </div>
+          <ul
+            style={{
+              listStyle: "none",
+              margin: 0,
+              padding: "8px 12px 12px",
+              maxHeight: 500,
+              overflowY: "auto",
+            }}
+          >
+            {visibleCafes.map((cafe) => (
+              <li
+                key={cafe.id}
+                style={{
+                  padding: 12,
+                  marginBottom: 10,
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.08)",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  mapRef.current?.flyTo({
+                    center: cafe.coordinates,
+                    zoom: 15,
+                  });
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>{cafe.name}</span>
+                  <span>{cafe.isSunny ? "☀️" : "☁️"}</span>
+                </div>
+                <div style={{ fontSize: 14, opacity: 0.9 }}>
+                  {cafe.weatherDescription}, {cafe.temperature}°C
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.75 }}>{cafe.address}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
-} 
+}
